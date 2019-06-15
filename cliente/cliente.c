@@ -1767,7 +1767,7 @@ void game_start(){
                     if(segundo==60){
                         segundo=0;
                         minuto++;
-                        if(minuto==1){
+                        if(minuto==5){
                             sair = 1;
                             break;
                         }
