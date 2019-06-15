@@ -10,6 +10,8 @@
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
 #include <allegro5/allegro_ttf.h>
+#include <allegro5/allegro_audio.h>
+#include <allegro5/allegro_acodec.h>
 #define FPS 60
 #define ALTURA 832
 #define LARGURA 832
@@ -65,7 +67,7 @@ ALLEGRO_BITMAP *playAgain = NULL, *playAgain2 = NULL, *sairRank = NULL, *sairRan
 ALLEGRO_BITMAP **medalha;
 ALLEGRO_TIMER *timer = NULL, *timerAnima = NULL;
 ALLEGRO_FONT *fonte = NULL, *fonteIP = NULL, *fonteTempo = NULL;
-
+ALLEGRO_AUDIO_STREAM *musica1 = NULL, *musica2 = NULL;
 
 char SERVER_IP[30];
 Winx posicaoWinx[MAX_CLIENT];
@@ -119,6 +121,28 @@ bool inicializar(){
     }
     if (!al_init_ttf_addon()){
         fprintf(stderr, "Falha ao inicializar add-on allegro_ttf.\n");
+        return false;
+    }
+    if (!al_install_audio()){
+        fprintf(stderr, "Falha ao inicializar áudio.\n");
+        return false;
+    }
+    if (!al_init_acodec_addon()){
+        fprintf(stderr, "Falha ao inicializar codecs de áudio.\n");
+        return false;
+    }
+    if (!al_reserve_samples(5)){
+        fprintf(stderr, "Falha ao reservar amostrar de audio\n");
+        return 0;
+    }
+    musica1 = al_load_audio_stream("fotinhas/musicas/mandown.ogg", 4, 1024);
+    if (!musica1){
+        fprintf(stderr, "Falha ao carregar audio.\n");
+        return false;
+    }
+    musica2 = al_load_audio_stream("fotinhas/musicas/winx.ogg", 4, 1024);
+    if (!musica2){
+        fprintf(stderr, "Falha ao carregar audio2.\n");
         return false;
     }
     janela = al_create_display(LARGURA, ALTURA);
@@ -663,6 +687,8 @@ void libera(){
     free(medalha);
     al_destroy_timer(timer);
     al_destroy_timer(timerAnima);
+    al_destroy_audio_stream(musica1);
+    al_destroy_audio_stream(musica2);
     al_destroy_event_queue(filaEventos);
     al_destroy_event_queue(filaCronometro);
     al_destroy_display(janela);
@@ -804,7 +830,7 @@ void atualizarMapa(){
     al_draw_bitmap(mapa, 0, 0, 0);
     desenhaPontuacao();
     al_draw_bitmap(fundoTempo, 0, 0, 0);
-    al_draw_textf(fonteTempo, al_map_rgb(0, 0, 0), 64, 5, ALLEGRO_ALIGN_CENTRE, "%d:%d", minuto, segundo);
+    al_draw_textf(fonteTempo, al_map_rgb(0, 0, 0), 64, 5, ALLEGRO_ALIGN_CENTRE, "%2d:%2d", minuto, segundo);
     for(i=0;i<TAM_MAPA;i++){
         for(j=0;j<TAM_MAPA;j++){
             if (matriz[j][i] == 10){
@@ -1473,6 +1499,9 @@ void confirmaInicio(){
 }
 
 void game_over(){
+    al_attach_audio_stream_to_mixer(musica2, al_get_default_mixer());
+    al_set_audio_stream_playmode(musica2, ALLEGRO_PLAYMODE_LOOP);
+    al_set_audio_stream_playing(musica2, true);
     char msg = 'e';
     sendMsgToServer(&msg, sizeof(char));
     al_draw_bitmap(fim, 0, 0, 0);
@@ -1500,7 +1529,7 @@ void game_over(){
             al_draw_bitmap(medalha[0], 21, 160, 0);
             break;
         case 1:
-            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 160, 0);
+            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 180, 0);
             al_draw_bitmap(medalha[1], 291, 160, 0);
             break;
         case 2:
@@ -1508,13 +1537,13 @@ void game_over(){
             al_draw_bitmap(medalha[2], 561, 160, 0);
             break;
         case 3:
-            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 430, 0);
+            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 450, 0);
             break;
         case 4:
             al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 430, 0);
             break;
         case 5:
-            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 430, 0);
+            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 450, 0);
             break;
         }
     }
@@ -1524,8 +1553,81 @@ void game_over(){
     al_flip_display();
     int apertou = 0;
     int emCima = 0;
+    int contador = 0;
+    al_start_timer(timerAnima); 
     while(!apertou){
         ALLEGRO_EVENT evento;
+        if(!al_is_event_queue_empty(filaCronometro)){
+            al_wait_for_event(filaCronometro, &evento);
+            if (evento.type == ALLEGRO_EVENT_TIMER){
+                if(contador%2==0){
+                    al_draw_bitmap(fundoRanking, 0, 0, 0);
+                    for(i=0;i<players;i++){
+                        switch (i)
+                        {
+                        case 0:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 180, 0);
+                            al_draw_bitmap(medalha[0], 21, 160, 0);
+                            break;
+                        case 1:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 160, 0);
+                            al_draw_bitmap(medalha[1], 291, 160, 0);
+                            break;
+                        case 2:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 180, 0);
+                            al_draw_bitmap(medalha[2], 561, 160, 0);
+                            break;
+                        case 3:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 430, 0);
+                            break;
+                        case 4:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 450, 0);
+                            break;
+                        case 5:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 430, 0);
+                            break;
+                        }
+                    }
+                    al_draw_bitmap(playAgain, 10, 786, 0);
+                    al_draw_bitmap(sairRank, 739, 786, 0);
+                    al_flip_display();
+                    contador++;
+                }
+                else{
+                    al_draw_bitmap(fundoRanking, 0, 0, 0);
+                    for(i=0;i<players;i++){
+                        switch (i)
+                        {
+                        case 0:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 160, 0);
+                            al_draw_bitmap(medalha[0], 21, 160, 0);
+                            break;
+                        case 1:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 180, 0);
+                            al_draw_bitmap(medalha[1], 291, 160, 0);
+                            break;
+                        case 2:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 160, 0);
+                            al_draw_bitmap(medalha[2], 561, 160, 0);
+                            break;
+                        case 3:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 450, 0);
+                            break;
+                        case 4:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 430, 0);
+                            break;
+                        case 5:
+                            al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 450, 0);
+                            break;
+                        }
+                    }
+                    al_draw_bitmap(playAgain, 10, 786, 0);
+                    al_draw_bitmap(sairRank, 739, 786, 0);
+                    al_flip_display();
+                    contador++;
+                }
+            }
+        }
         if(!al_event_queue_is_empty(filaEventos)){
             al_wait_for_event(filaEventos, &evento);
             if(evento.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP){
@@ -1540,7 +1642,7 @@ void game_over(){
                     fecharJogo = true;
                 }
             }
-            else if(evento.type == ALLEGRO_EVENT_MOUSE_AXES){
+            /*else if(evento.type == ALLEGRO_EVENT_MOUSE_AXES){
                 if(evento.mouse.x>=10 && evento.mouse.x<=329 && evento.mouse.y>=786 && evento.mouse.y<=811){
                     emCima = 0;
                 }
@@ -1569,7 +1671,7 @@ void game_over(){
                         }
                         break;
                 }
-            }
+            }*/
             else if(evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
                 apertou = 1;
                 libera();
@@ -1577,7 +1679,7 @@ void game_over(){
             }
         }
         if(apertou == 1) break;
-        switch(emCima){
+        /*switch(emCima){
             case 0:
                 al_draw_bitmap(fundoRanking, 0, 0, 0);
                 for(i=0;i<players;i++){
@@ -1588,7 +1690,7 @@ void game_over(){
                         al_draw_bitmap(medalha[0], 21, 160, 0);
                         break;
                     case 1:
-                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 160, 0);
+                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 180, 0);
                         al_draw_bitmap(medalha[1], 291, 160, 0);
                         break;
                     case 2:
@@ -1596,13 +1698,13 @@ void game_over(){
                         al_draw_bitmap(medalha[2], 561, 160, 0);
                         break;
                     case 3:
-                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 430, 0);
+                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 450, 0);
                         break;
                     case 4:
                         al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 430, 0);
                         break;
                     case 5:
-                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 430, 0);
+                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 450, 0);
                         break;
                     }
                 }
@@ -1620,7 +1722,7 @@ void game_over(){
                         al_draw_bitmap(medalha[0], 21, 160, 0);
                         break;
                     case 1:
-                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 160, 0);
+                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 180, 0);
                         al_draw_bitmap(medalha[1], 291, 160, 0);
                         break;
                     case 2:
@@ -1628,13 +1730,13 @@ void game_over(){
                         al_draw_bitmap(medalha[2], 561, 160, 0);
                         break;
                     case 3:
-                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 430, 0);
+                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 21, 450, 0);
                         break;
                     case 4:
                         al_draw_bitmap(winxRanking[ranking[i].qualWinx], 291, 430, 0);
                         break;
                     case 5:
-                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 430, 0);
+                        al_draw_bitmap(winxRanking[ranking[i].qualWinx], 561, 450, 0);
                         break;
                     }
                 }
@@ -1642,11 +1744,16 @@ void game_over(){
                 al_draw_bitmap(sairRank2, 739, 786, 0);
                 al_flip_display();
                 break;
-        }
+        }*/
     }
+    al_set_audio_stream_playing(musica1, false);
+    al_stop_timer(timerAnima); 
 }
 
 void game_start(){
+    al_attach_audio_stream_to_mixer(musica1, al_get_default_mixer());
+    al_set_audio_stream_playmode(musica1, ALLEGRO_PLAYMODE_LOOP);
+    al_set_audio_stream_playing(musica1, true);
     al_rest(1.0);
     temp = 0, segundo = 0, minuto = 0;
     sair = false;
@@ -1800,6 +1907,7 @@ void game_start(){
             }
         }
     }
+    al_set_audio_stream_playing(musica1, false);
 }
 
 int main(){
