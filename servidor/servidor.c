@@ -264,7 +264,7 @@ void mostraPosicao(int qtJogadores){
 		if(achouCristal==1){
 			achouCristalTempo++;
 			//printf("tempo=%d\n", achouCristalTempo);
-			if(achouCristalTempo>=60000){
+			if(achouCristalTempo>=20000){
 				achouCristal=0; achouCristalTempo=0;
 				for(i=0;i<players;i++) pacote.anda[i]=true;
 				gerarPosCristal();
