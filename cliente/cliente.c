@@ -1746,7 +1746,7 @@ void game_over(){
                 break;
         }*/
     }
-    al_set_audio_stream_playing(musica1, false);
+    al_set_audio_stream_playing(musica2, false);
     al_stop_timer(timerAnima); 
 }
 
