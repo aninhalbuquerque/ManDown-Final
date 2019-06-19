@@ -1808,7 +1808,8 @@ void game_start(){
             }
             else matriz[pacote.machoMorto.y][pacote.machoMorto.x] = 11;
             matriz[pacote.macho.y][pacote.macho.x] = 10;
-            matriz[pacote.cristal.y][pacote.cristal.x] = 20;
+            if(pacote.qualCristal!=-1) matriz[pacote.cristal.y][pacote.cristal.x] = 20;
+	    else matriz[pacote.cristal.y][pacote.cristal.x] = 11;
             for (i = 0; i < pacoteInicial.qtJogadores; i++) {
                 posicaoWinx[i].pos = pacote.posicoesAtualizadas[i];
                 posicaoWinx[i].direcao = pacote.dir[i];
@@ -1827,7 +1828,8 @@ void game_start(){
                 }
                 else matriz[pacote.machoMorto.y][pacote.machoMorto.x] = 11;
                 matriz[pacote.macho.y][pacote.macho.x] = 10;
-                matriz[pacote.cristal.y][pacote.cristal.x] = 20;
+                if(pacote.qualCristal!=-1) matriz[pacote.cristal.y][pacote.cristal.x] = 20;
+	        else matriz[pacote.cristal.y][pacote.cristal.x] = 11;
                 for (i = 0; i < players; i++) {
                     posicaoWinx[i].pos = pacote.posicoesAtualizadas[i];
                     posicaoWinx[i].direcao = pacote.dir[i];
