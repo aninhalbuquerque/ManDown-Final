@@ -1107,7 +1107,7 @@ void menuPersonagem(){
     char msg='A';
     sendMsgToServer(&msg, sizeof(char));
     int *escolhidas = NULL;
-    escolhidas = (int *) malloc(MAX_CLIENT*sizeof(int));
+    escolhidas = (int *) calloc(MAX_CLIENT, sizeof(int));
     if (escolhidas == NULL) {
         printf("Erro ao alocar escolhidas\n"); 
         exit(0);
