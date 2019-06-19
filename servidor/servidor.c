@@ -260,7 +260,12 @@ void mostraPosicao(int qtJogadores){
 	int achouCristal=0, achouCristalTempo=0;
 	int matouMachoTempo=0;
 	int ok = 1;
+    	int comecou = 0;
     while(ok){
+		if(comecou == 0) {
+			broadcast(&pacote, sizeof(Movimentacao)); 
+			comecou=1;
+		}
 		if(achouCristal==1){
 			achouCristalTempo++;
 			//printf("tempo=%d\n", achouCristalTempo);
