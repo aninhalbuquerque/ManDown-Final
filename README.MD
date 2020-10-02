@@ -1,6 +1,5 @@
 # ManDown-Final
 Repositório do projeto da disciplina Introdução a Programação(if669).
-[Documento explicando as coisas.](https://docs.google.com/document/d/1GUkAA6Tv_SgV5HuBIBtLkdRdiGoB3Gxj1L-__42aXpQ/edit) 
 
 ## Criado por
 [ALICE OLIVEIRA DE QUEIROZ BRITO](https://github.com/aliceoq)  
